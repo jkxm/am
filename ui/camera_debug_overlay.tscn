@@ -1,0 +1,67 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/camera_debug_overlay.gd" id="1_camdbg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.55)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="CameraDebugOverlay" type="CanvasLayer"]
+script = ExtResource("1_camdbg")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -420.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 280.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 394.0
+offset_bottom = 256.0
+
+[node name="ContextLabel" type="Label" parent="Panel/VBox"]
+text = "Context: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="DistanceLabel" type="Label" parent="Panel/VBox"]
+text = "Distance: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="HeightLabel" type="Label" parent="Panel/VBox"]
+text = "Height: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="YawPitchLabel" type="Label" parent="Panel/VBox"]
+text = "Yaw: —  Pitch: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="OccluderLabel" type="Label" parent="Panel/VBox"]
+text = "Occluders: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="WallLabel" type="Label" parent="Panel/VBox"]
+text = "Wall: —"
+theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+
+[node name="MoveRawLabel" type="Label" parent="Panel/VBox"]
+text = "Move raw: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="MoveProjectedLabel" type="Label" parent="Panel/VBox"]
+text = "Move proj: —"
+theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
+
+[node name="VelocityLabel" type="Label" parent="Panel/VBox"]
+text = "Velocity: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)

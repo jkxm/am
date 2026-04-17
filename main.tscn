@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://cnjao8ahrk5wk"]
+
+[ext_resource type="PackedScene" path="res://arena/test_arena.tscn" id="1_arena"]
+[ext_resource type="PackedScene" path="res://arena/target_dummy.tscn" id="1b_dummy"]
+[ext_resource type="PackedScene" path="res://arena/destructible.tscn" id="1b_dest"]
+[ext_resource type="PackedScene" path="res://monster/brawler.tscn" id="1c_brawler"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://player/camera/combat_camera.tscn" id="2b_cam"]
+[ext_resource type="Script" path="res://player/camera/occlusion_fader.gd" id="2c_occ"]
+[ext_resource type="PackedScene" path="res://ui/debug_hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://ui/camera_debug_overlay.tscn" id="3b_camdbg"]
+[ext_resource type="PackedScene" path="res://ui/monster_offscreen_indicator.tscn" id="3e_moi"]
+[ext_resource type="PackedScene" path="res://ui/state_log.tscn" id="3f_slog"]
+[ext_resource type="PackedScene" path="res://ui/camera_framing_debug.tscn" id="3g_fdbg"]
+
+[node name="Main" type="Node3D"]
+
+[node name="TestArena" parent="." instance=ExtResource("1_arena")]
+
+[node name="TargetDummy" parent="." instance=ExtResource("1b_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.0, 8)
+
+[node name="Destructible" parent="." instance=ExtResource("1b_dest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.0, -3)
+
+[node name="MonsterBrawler" parent="." instance=ExtResource("1c_brawler")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, -14)
+player_path = NodePath("../Player")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+walk_speed = 6.5
+sprint_speed = 11.0
+jump_velocity = 10.0
+gravity = 30.0
+camera_rig_path = NodePath("../CombatCamera")
+
+[node name="CombatCamera" parent="." instance=ExtResource("2b_cam")]
+player_path = NodePath("../Player")
+
+[node name="OcclusionFader" type="Node3D" parent="."]
+script = ExtResource("2c_occ")
+camera_path = NodePath("../CombatCamera")
+player_path = NodePath("../Player")
+
+[node name="DebugHUD" parent="." instance=ExtResource("3_hud")]
+player_path = NodePath("../Player")
+monster_path = NodePath("../MonsterBrawler")
+
+[node name="CameraDebugOverlay" parent="." instance=ExtResource("3b_camdbg")]
+camera_path = NodePath("../CombatCamera")
+player_path = NodePath("../Player")
+occlusion_fader_path = NodePath("../OcclusionFader")
+
+[node name="MonsterOffscreenIndicator" parent="." instance=ExtResource("3e_moi")]
+camera_path = NodePath("../CombatCamera")
+
+[node name="StateLog" parent="." instance=ExtResource("3f_slog")]
+
+[node name="CameraFramingDebug" parent="." instance=ExtResource("3g_fdbg")]
+camera_path = NodePath("../CombatCamera")
+player_path = NodePath("../Player")

@@ -1,0 +1,113 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://monster/brawler.gd" id="1_brawler"]
+[ext_resource type="Script" path="res://monster/ai/monster_state_machine.gd" id="2_sm"]
+[ext_resource type="Script" path="res://monster/ai/states/monster_idle.gd" id="3_idle"]
+[ext_resource type="Script" path="res://monster/ai/states/monster_chase.gd" id="4_chase"]
+[ext_resource type="Script" path="res://monster/ai/states/monster_attack.gd" id="5_atk"]
+[ext_resource type="Script" path="res://monster/ai/states/monster_exhausted.gd" id="6_exh"]
+[ext_resource type="Script" path="res://monster/ai/states/monster_dying.gd" id="7_die"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="8_hbox"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="9_hurt"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(3.0, 1.8, 4.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_torso"]
+size = Vector3(3.0, 1.8, 3.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(1.4, 1.0, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tail"]
+size = Vector3(0.8, 0.8, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hbox"]
+size = Vector3(1.0, 1.0, 1.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_torso_hurt"]
+size = Vector3(3.1, 1.9, 3.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_head_hurt"]
+size = Vector3(1.5, 1.1, 1.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tail_hurt"]
+size = Vector3(0.9, 0.9, 2.6)
+
+[node name="MonsterBrawler" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_brawler")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="MeshRoot" type="Node3D" parent="."]
+
+[node name="Torso" type="MeshInstance3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+mesh = SubResource("BoxMesh_torso")
+
+[node name="Head" type="MeshInstance3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -2.0)
+mesh = SubResource("BoxMesh_head")
+
+[node name="Tail" type="MeshInstance3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.2)
+mesh = SubResource("BoxMesh_tail")
+
+[node name="AttackHitbox" type="Area3D" parent="MeshRoot"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("8_hbox")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshRoot/AttackHitbox"]
+shape = SubResource("BoxShape3D_hbox")
+
+[node name="Hurtboxes" type="Node3D" parent="MeshRoot"]
+
+[node name="TorsoHurtbox" type="Area3D" parent="MeshRoot/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("9_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshRoot/Hurtboxes/TorsoHurtbox"]
+shape = SubResource("BoxShape3D_torso_hurt")
+
+[node name="HeadHurtbox" type="Area3D" parent="MeshRoot/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -2.0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("9_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshRoot/Hurtboxes/HeadHurtbox"]
+shape = SubResource("BoxShape3D_head_hurt")
+
+[node name="TailHurtbox" type="Area3D" parent="MeshRoot/Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.2)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("9_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshRoot/Hurtboxes/TailHurtbox"]
+shape = SubResource("BoxShape3D_tail_hurt")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("2_sm")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3_idle")
+
+[node name="Chase" type="Node" parent="StateMachine"]
+script = ExtResource("4_chase")
+
+[node name="Attack" type="Node" parent="StateMachine"]
+script = ExtResource("5_atk")
+
+[node name="Exhausted" type="Node" parent="StateMachine"]
+script = ExtResource("6_exh")
+
+[node name="Dying" type="Node" parent="StateMachine"]
+script = ExtResource("7_die")

@@ -1,0 +1,186 @@
+[gd_scene load_steps=18 format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_env"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.55, 0.6, 1)
+ambient_light_energy = 0.5
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.42, 0.45, 0.48, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_platform_s"]
+size = Vector3(4, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_platform_s"]
+size = Vector3(4, 0.5, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_platform"]
+albedo_color = Color(0.55, 0.5, 0.4, 1)
+roughness = 0.85
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_platform_m"]
+size = Vector3(6, 0.5, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_platform_m"]
+size = Vector3(6, 0.5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_big"]
+size = Vector3(0.8, 10, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_big"]
+size = Vector3(0.8, 10, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.48, 0.42, 0.36, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pillar"]
+size = Vector3(3, 8, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pillar"]
+size = Vector3(3, 8, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_corridor_wall"]
+size = Vector3(0.6, 4, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_corridor_wall"]
+size = Vector3(0.6, 4, 10)
+
+[node name="TestArena" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 12, 0)
+light_energy = 1.1
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="PlatformLow" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.0, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlatformLow"]
+shape = SubResource("BoxShape3D_platform_s")
+
+[node name="Mesh" type="MeshInstance3D" parent="PlatformLow"]
+mesh = SubResource("BoxMesh_platform_s")
+surface_material_override/0 = SubResource("StandardMaterial3D_platform")
+
+[node name="PlatformMid" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlatformMid"]
+shape = SubResource("BoxShape3D_platform_m")
+
+[node name="Mesh" type="MeshInstance3D" parent="PlatformMid"]
+mesh = SubResource("BoxMesh_platform_m")
+surface_material_override/0 = SubResource("StandardMaterial3D_platform")
+
+[node name="PlatformHigh" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5.0, -4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlatformHigh"]
+shape = SubResource("BoxShape3D_platform_s")
+
+[node name="Mesh" type="MeshInstance3D" parent="PlatformHigh"]
+mesh = SubResource("BoxMesh_platform_s")
+surface_material_override/0 = SubResource("StandardMaterial3D_platform")
+
+[node name="PlatformPerch" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 7.5, -2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlatformPerch"]
+shape = SubResource("BoxShape3D_platform_s")
+
+[node name="Mesh" type="MeshInstance3D" parent="PlatformPerch"]
+mesh = SubResource("BoxMesh_platform_s")
+surface_material_override/0 = SubResource("StandardMaterial3D_platform")
+
+[node name="WallRunLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 5, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallRunLeft"]
+shape = SubResource("BoxShape3D_wall_big")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallRunLeft"]
+mesh = SubResource("BoxMesh_wall_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallRunRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 5, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallRunRight"]
+shape = SubResource("BoxShape3D_wall_big")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallRunRight"]
+mesh = SubResource("BoxMesh_wall_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallPerchApproach" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 5, 5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallPerchApproach"]
+shape = SubResource("BoxShape3D_wall_big")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallPerchApproach"]
+mesh = SubResource("BoxMesh_wall_big")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="Pillar" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar"]
+shape = SubResource("BoxShape3D_pillar")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pillar"]
+mesh = SubResource("BoxMesh_pillar")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CorridorLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2, -18)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorLeft"]
+shape = SubResource("BoxShape3D_corridor_wall")
+
+[node name="Mesh" type="MeshInstance3D" parent="CorridorLeft"]
+mesh = SubResource("BoxMesh_corridor_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CorridorRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, -18)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CorridorRight"]
+shape = SubResource("BoxShape3D_corridor_wall")
+
+[node name="Mesh" type="MeshInstance3D" parent="CorridorRight"]
+mesh = SubResource("BoxMesh_corridor_wall")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)

@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/monster_offscreen_indicator.gd" id="1_moi"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_arrow"]
+font_size = 48
+font_color = Color(1, 0.35, 0.35, 0.95)
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+
+[node name="MonsterOffscreenIndicator" type="CanvasLayer"]
+script = ExtResource("1_moi")
+
+[node name="Arrow" type="Label" parent="."]
+custom_minimum_size = Vector2(60, 60)
+offset_right = 60.0
+offset_bottom = 60.0
+pivot_offset = Vector2(30, 30)
+text = "▲"
+label_settings = SubResource("LabelSettings_arrow")
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -1,0 +1,101 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/debug_hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.55)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="DebugHUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 520.0
+offset_bottom = 420.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 494.0
+offset_bottom = 394.0
+
+[node name="StateLabel" type="Label" parent="Panel/VBox"]
+text = "State: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="StaminaLabel" type="Label" parent="Panel/VBox"]
+text = "Stamina: — / —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="StaminaBar" type="ProgressBar" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 10)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="EnhancedLabel" type="Label" parent="Panel/VBox"]
+text = "Enhanced: — / —"
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+
+[node name="EnhancedBar" type="ProgressBar" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 10)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ArmorLabel" type="Label" parent="Panel/VBox"]
+text = "Armor: UP"
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+
+[node name="ArmorBar" type="ProgressBar" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 10)
+max_value = 1.0
+value = 1.0
+show_percentage = false
+modulate = Color(0.9, 0.85, 0.4, 1)
+
+[node name="HealthLabel" type="Label" parent="Panel/VBox"]
+text = "Health: — / —"
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+
+[node name="HealthBar" type="ProgressBar" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 10)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+modulate = Color(0.85, 0.35, 0.35, 1)
+
+[node name="VelocityLabel" type="Label" parent="Panel/VBox"]
+text = "Velocity: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="GroundedLabel" type="Label" parent="Panel/VBox"]
+text = "Grounded: —"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="WallLabel" type="Label" parent="Panel/VBox"]
+text = "Wall: no"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="IFrameLabel" type="Label" parent="Panel/VBox"]
+text = "I-frames: off"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+
+[node name="CombatLabel" type="Label" parent="Panel/VBox"]
+text = "Combat: —"
+theme_override_colors/font_color = Color(1, 0.85, 0.7, 1)
+
+[node name="MonsterLabel" type="Label" parent="Panel/VBox"]
+text = "Monster: —"
+theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
+
+[node name="DiagLabel" type="Label" parent="Panel/VBox"]
+text = "Diag: —"
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)

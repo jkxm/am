@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/camera_framing_debug.gd" id="1_fdbg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.6)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="CameraFramingDebug" type="CanvasLayer"]
+script = ExtResource("1_fdbg")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Guides" type="Control" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="PlayerDot" type="ColorRect" parent="Root/Guides"]
+custom_minimum_size = Vector2(10, 10)
+offset_right = 10.0
+offset_bottom = 10.0
+color = Color(1, 0.9, 0.1, 0.9)
+
+[node name="ValuesPanel" type="PanelContainer" parent="Root"]
+offset_left = 16.0
+offset_top = 420.0
+offset_right = 620.0
+offset_bottom = 720.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Values" type="Label" parent="Root"]
+offset_left = 28.0
+offset_top = 432.0
+offset_right = 608.0
+offset_bottom = 708.0
+theme_override_colors/font_color = Color(1, 1, 0.7, 1)
+text = "[F4] Framing Debug"
