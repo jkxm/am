@@ -1,0 +1,232 @@
+[gd_scene load_steps=24 format=3]
+
+[ext_resource type="Script" path="res://monster/wall_crawler/wall_crawler.gd" id="1_wc"]
+[ext_resource type="Script" path="res://monster/wall_crawler/wc_state_machine.gd" id="2_sm"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_idle.gd" id="3_idle"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_combat_ground.gd" id="4_cg"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_combat_wall.gd" id="5_cw"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_transitioning.gd" id="6_tr"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_attacking.gd" id="7_at"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_exhausted.gd" id="8_ex"]
+[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_dying.gd" id="9_die"]
+[ext_resource type="Script" path="res://combat/hitbox.gd" id="10_hbox"]
+[ext_resource type="Script" path="res://combat/hurtbox.gd" id="11_hurt"]
+[ext_resource type="PackedScene" path="res://monster/wall_crawler/acid_projectile.tscn" id="12_proj"]
+[ext_resource type="PackedScene" path="res://monster/wall_crawler/acid_puddle.tscn" id="13_pud"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(3.2, 1.6, 3.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(1.0, 1.0, 1.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_torso_hurt"]
+size = Vector3(2.6, 1.3, 3.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_head_hurt"]
+size = Vector3(1.3, 0.9, 1.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plate_hurt"]
+size = Vector3(1.1, 0.4, 1.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_leg_hurt"]
+size = Vector3(0.5, 0.5, 2.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_belly_hurt"]
+size = Vector3(2.2, 0.35, 2.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_back_hurt"]
+size = Vector3(2.0, 0.35, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_throat_hurt"]
+size = Vector3(0.9, 0.35, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tail_hurt"]
+size = Vector3(0.55, 0.55, 2.1)
+
+[node name="WallCrawler" type="CharacterBody3D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_wc")
+acid_projectile_scene = ExtResource("12_proj")
+acid_puddle_scene = ExtResource("13_pud")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="MeshRoot" type="Node3D" parent="."]
+
+[node name="Torso" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+size = Vector3(2.5, 1.2, 3.0)
+
+[node name="Head" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)
+size = Vector3(1.2, 0.8, 1.5)
+
+[node name="MandibleLeft" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.85, -2.8)
+size = Vector3(0.3, 0.3, 0.8)
+
+[node name="MandibleRight" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.85, -2.8)
+size = Vector3(0.3, 0.3, 0.8)
+
+[node name="BackPlateLeft" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.85, -0.3)
+size = Vector3(1.0, 0.3, 1.2)
+
+[node name="BackPlateRight" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.85, -0.3)
+size = Vector3(1.0, 0.3, 1.2)
+
+[node name="LegFrontLeft" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, -1.7, 0.5, -0.9)
+size = Vector3(0.4, 0.4, 2.5)
+
+[node name="LegFrontRight" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, 1.7, 0.5, -0.9)
+size = Vector3(0.4, 0.4, 2.5)
+
+[node name="LegRearLeft" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1.0)
+size = Vector3(0.4, 0.4, 2.5)
+
+[node name="LegRearRight" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1.0)
+size = Vector3(0.4, 0.4, 2.5)
+
+[node name="Tail" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.3)
+size = Vector3(0.5, 0.5, 2.0)
+
+[node name="BellyWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+size = Vector3(2.0, 0.15, 2.2)
+
+[node name="BackWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.76, -0.3)
+size = Vector3(1.8, 0.15, 2.0)
+
+[node name="ThroatWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.1)
+size = Vector3(0.8, 0.1, 0.8)
+
+[node name="ProjectileSpawn" type="Marker3D" parent="MeshRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -2.9)
+
+[node name="AttackHitbox" type="Area3D" parent="."]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("10_hbox")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackHitbox"]
+shape = SubResource("BoxShape3D_hitbox")
+
+[node name="Hurtboxes" type="Node3D" parent="."]
+
+[node name="TorsoHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/TorsoHurtbox"]
+shape = SubResource("BoxShape3D_torso_hurt")
+
+[node name="HeadHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/HeadHurtbox"]
+shape = SubResource("BoxShape3D_head_hurt")
+
+[node name="BackPlateLeftHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.85, -0.3)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateLeftHurtbox"]
+shape = SubResource("BoxShape3D_plate_hurt")
+
+[node name="BackPlateRightHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.85, -0.3)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateRightHurtbox"]
+shape = SubResource("BoxShape3D_plate_hurt")
+
+[node name="RearLegLeftHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1.0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegLeftHurtbox"]
+shape = SubResource("BoxShape3D_leg_hurt")
+
+[node name="RearLegRightHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1.0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegRightHurtbox"]
+shape = SubResource("BoxShape3D_leg_hurt")
+
+[node name="BellyHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BellyHurtbox"]
+shape = SubResource("BoxShape3D_belly_hurt")
+
+[node name="BackHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.76, -0.3)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackHurtbox"]
+shape = SubResource("BoxShape3D_back_hurt")
+
+[node name="ThroatHurtbox" type="Area3D" parent="Hurtboxes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.1)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("11_hurt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/ThroatHurtbox"]
+shape = SubResource("BoxShape3D_throat_hurt")
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource("2_sm")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3_idle")
+
+[node name="CombatGround" type="Node" parent="StateMachine"]
+script = ExtResource("4_cg")
+
+[node name="CombatWall" type="Node" parent="StateMachine"]
+script = ExtResource("5_cw")
+
+[node name="Transitioning" type="Node" parent="StateMachine"]
+script = ExtResource("6_tr")
+
+[node name="Attacking" type="Node" parent="StateMachine"]
+script = ExtResource("7_at")
+
+[node name="Exhausted" type="Node" parent="StateMachine"]
+script = ExtResource("8_ex")
+
+[node name="Dying" type="Node" parent="StateMachine"]
+script = ExtResource("9_die")

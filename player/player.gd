@@ -33,7 +33,7 @@ extends CharacterBody3D
 @onready var mesh_root: Node3D = $MeshRoot
 @onready var wall_detector: WallDetector = $WallDetector
 @onready var heavy_weapon: HeavyWeapon = $MeshRoot/HeavyWeapon
-@onready var charge_glow: OmniLight3D = $MeshRoot/SwordMesh/ChargeGlow
+@onready var charge_glow: OmniLight3D = get_node_or_null("MeshRoot/SwordMesh/ChargeGlow")
 @onready var trajectory_preview: TrajectoryPreview = $TrajectoryPreview
 
 var camera_rig: CombatCamera = null
@@ -112,6 +112,24 @@ func _on_hit_received(event: DamageEvent) -> void:
 	GameEvents.player_took_hit.emit(event.amount, false)
 	if health.is_alive():
 		state_machine.change_to("Stagger")
+
+func take_environmental_damage(amount: float) -> void:
+	if invulnerable or amount <= 0.0:
+		return
+	health.damage(amount)
+	GameEvents.player_took_hit.emit(amount, false)
+
+func active_attack_data() -> AttackData:
+	if state_machine == null:
+		return null
+	var cur: Node = state_machine._current
+	if cur == null:
+		return null
+	if "_data" in cur:
+		var d: Variant = cur.get("_data")
+		if d is AttackData:
+			return d as AttackData
+	return null
 
 func _physics_process(delta: float) -> void:
 	wall_detector.update()

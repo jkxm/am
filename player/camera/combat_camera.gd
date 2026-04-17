@@ -9,8 +9,8 @@ extends Node3D
 @export var invert_y: bool = false
 
 @export_group("Orbit")
-@export var pitch_min_deg: float = -70.0
-@export var pitch_max_deg: float = 70.0
+@export var pitch_min_deg: float = -89.0
+@export var pitch_max_deg: float = 89.0
 @export var orbit_lerp_speed: float = 8.0
 
 @export_group("Zoom — Distance")

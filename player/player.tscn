@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dhdy36upsr2kq"]
 
 [ext_resource type="Script" uid="uid://bdmb6lsvox272" path="res://player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://player/animation/y_bot_animator.gd" id="99_ybot"]
 [ext_resource type="Script" uid="uid://dwdqhe7kgy10q" path="res://player/resources/enhanced_resource.gd" id="2b_enh"]
 [ext_resource type="Script" uid="uid://b2qy6pixcowt1" path="res://player/resources/stamina.gd" id="2_stamina"]
 [ext_resource type="Script" uid="uid://dlvssb0iss03i" path="res://player/states/state_machine.gd" id="3_sm"]
@@ -69,25 +70,9 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="MeshRoot" type="Node3D" parent="." unique_id=57905772]
 
-[node name="Mesh" type="MeshInstance3D" parent="MeshRoot" unique_id=1651798619]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_body")
-
-[node name="FacingMarker" type="MeshInstance3D" parent="MeshRoot" unique_id=918807087]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, -0.38)
-mesh = SubResource("BoxMesh_face")
-surface_material_override/0 = SubResource("StandardMaterial3D_face")
-
-[node name="SwordMesh" type="MeshInstance3D" parent="MeshRoot" unique_id=2010078426]
-transform = Transform3D(1, 0, 0, 0, 0.342, -0.9397, 0, 0.9397, 0.342, 0.45, 1.25, -0.4)
-mesh = SubResource("BoxMesh_sword")
-surface_material_override/0 = SubResource("StandardMaterial3D_sword")
-
-[node name="ChargeGlow" type="OmniLight3D" parent="MeshRoot/SwordMesh"]
-light_color = Color(1, 0.8, 0.3, 1)
-light_energy = 0.0
-omni_range = 3.0
+[node name="YBotAnimator" type="Node3D" parent="MeshRoot"]
+script = ExtResource("99_ybot")
+player_path = NodePath("../..")
 
 [node name="HeavyWeapon" type="Node3D" parent="MeshRoot" unique_id=1650899274]
 script = ExtResource("10_hwpn")
