@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://monster/ai/states/monster_dying.gd" id="7_die"]
 [ext_resource type="Script" path="res://combat/hitbox.gd" id="8_hbox"]
 [ext_resource type="Script" path="res://combat/hurtbox.gd" id="9_hurt"]
+[ext_resource type="Script" path="res://monster/knockback_component.gd" id="10_kb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_body"]
 size = Vector3(3.0, 1.8, 4.2)
@@ -111,3 +112,6 @@ script = ExtResource("6_exh")
 
 [node name="Dying" type="Node" parent="StateMachine"]
 script = ExtResource("7_die")
+
+[node name="Knockback" type="Node" parent="."]
+script = ExtResource("10_kb")

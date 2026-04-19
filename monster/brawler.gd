@@ -23,6 +23,7 @@ signal state_changed(state: String)
 @onready var _attack_hitbox: Hitbox = $MeshRoot/AttackHitbox
 @onready var _attack_hitbox_shape: CollisionShape3D = $MeshRoot/AttackHitbox/CollisionShape3D
 @onready var _state_machine: MonsterStateMachine = $StateMachine
+@onready var _knockback: KnockbackComponent = get_node_or_null("Knockback")
 @onready var _part_hurtboxes: Array = [
 	$MeshRoot/Hurtboxes/TorsoHurtbox,
 	$MeshRoot/Hurtboxes/HeadHurtbox,
@@ -68,6 +69,8 @@ func _ready() -> void:
 		hb.hit_received.connect(_on_hurtbox_hit.bind(hb))
 	_state_machine.setup(self)
 	_state_machine.state_changed.connect(_on_state_changed)
+	if _knockback != null:
+		_knockback.setup(self)
 	_refresh_colors()
 	health_changed.emit(total_health, max_health)
 	phase_changed.emit(phase)
@@ -75,7 +78,17 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	for key: String in _cooldowns.keys():
 		_cooldowns[key] = maxf(0.0, _cooldowns[key] - delta)
+	if _knockback != null and _knockback.process(delta, self):
+		return
 	_state_machine.physics_step(delta)
+
+func receive_knockback(direction: Vector3, raw_force: float) -> bool:
+	if _knockback == null:
+		return false
+	return _knockback.apply(direction, raw_force)
+
+func knockback_component() -> KnockbackComponent:
+	return _knockback
 
 func apply_gravity(delta: float) -> void:
 	if is_on_floor():

@@ -97,8 +97,8 @@ func _on_health_changed(current: float, maximum: float) -> void:
 
 func _on_died() -> void:
 	GameEvents.player_died.emit()
-	health.revive()
-	armor.accelerate()
+	invulnerable = true
+	velocity = Vector3.ZERO
 
 func _on_hit_received(event: DamageEvent) -> void:
 	if invulnerable:
@@ -191,7 +191,59 @@ func apply_ground_friction(delta: float) -> void:
 func do_jump() -> void:
 	velocity.y = jump_velocity
 
-func on_landed_hit() -> void:
+func on_landed_hit(hit_point: Vector3 = Vector3.ZERO, hit_normal: Vector3 = Vector3.ZERO, charge_level: int = 0) -> void:
 	enhanced_resource.gain_from_hit()
 	armor.accelerate()
 	GameEvents.player_landed_hit.emit(heavy_weapon.hitbox.damage)
+	if hit_point != Vector3.ZERO:
+		GameEvents.player_hit_landed_at.emit(hit_point, hit_normal, charge_level)
+
+const _GROUND_KNOCKBACK_UP_ANGLE_DEG: float = 35.0
+const _AIR_SLAM_FORWARD_BIAS: float = 0.25
+
+func deliver_knockback(target: Node, context: StringName, hit_point: Vector3, charge_level: int, extra_dir: Vector3 = Vector3.ZERO) -> void:
+	if target == null or not target.has_method("receive_knockback") or not target.has_method("knockback_component"):
+		return
+	var kb: KnockbackComponent = target.knockback_component()
+	if kb == null:
+		return
+	var raw: float = kb.force_for_charge_level(charge_level)
+	if raw <= 0.0:
+		return
+	var dir: Vector3 = _knockback_direction(context, extra_dir)
+	if dir.length() < 0.001:
+		return
+	var applied: bool = target.receive_knockback(dir, raw)
+	var result: Dictionary = kb.compute_effective_force(raw)
+	GameEvents.player_knockback_delivered.emit(
+		hit_point,
+		dir.normalized(),
+		float(result["effective"]),
+		not applied or bool(result["resisted"]),
+		charge_level
+	)
+
+func _knockback_direction(context: StringName, extra_dir: Vector3) -> Vector3:
+	var forward: Vector3 = -mesh_root.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() < 0.01:
+		forward = Vector3.FORWARD
+	forward = forward.normalized()
+	var right: Vector3 = mesh_root.global_transform.basis.x
+	right.y = 0.0
+	if right.length() < 0.01:
+		right = Vector3.RIGHT
+	right = right.normalized()
+
+	match context:
+		&"ground":
+			var tilt: Basis = Basis(right, deg_to_rad(_GROUND_KNOCKBACK_UP_ANGLE_DEG))
+			return (tilt * forward).normalized()
+		&"wall":
+			if extra_dir.length() > 0.01:
+				return extra_dir.normalized()
+			return forward
+		&"air":
+			var dir: Vector3 = Vector3.DOWN + forward * _AIR_SLAM_FORWARD_BIAS
+			return dir.normalized()
+	return forward

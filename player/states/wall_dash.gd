@@ -34,22 +34,22 @@ func enter(_prev_state: String) -> void:
 	player.invulnerable = false
 
 func _wall_axes(wall_normal: Vector3) -> Array[Vector3]:
-	var cam_forward: Vector3 = player.camera_rig.get_camera_forward()
+	var cam_up: Vector3 = player.camera_rig.get_camera_up()
 	var cam_right: Vector3 = player.camera_rig.get_camera_right()
-	var forward_on_wall: Vector3 = cam_forward - wall_normal * cam_forward.dot(wall_normal)
+	var wall_forward: Vector3 = cam_up - wall_normal * cam_up.dot(wall_normal)
+	var wall_right: Vector3 = cam_right - wall_normal * cam_right.dot(wall_normal)
 
-	if forward_on_wall.length() >= dead_zone:
-		var wf: Vector3 = forward_on_wall.normalized()
-		var wr: Vector3 = wf.cross(wall_normal).normalized()
-		return [wf, wr]
+	if wall_forward.length() >= dead_zone:
+		wall_forward = wall_forward.normalized()
+	else:
+		wall_forward = Vector3.ZERO
 
-	var right_on_wall: Vector3 = cam_right - wall_normal * cam_right.dot(wall_normal)
-	if right_on_wall.length() >= dead_zone:
-		var wr2: Vector3 = right_on_wall.normalized()
-		var wf2: Vector3 = wall_normal.cross(wr2).normalized()
-		return [wf2, wr2]
+	if wall_right.length() >= dead_zone:
+		wall_right = wall_right.normalized()
+	else:
+		wall_right = Vector3.ZERO
 
-	return [Vector3.ZERO, Vector3.ZERO]
+	return [wall_forward, wall_right]
 
 func _facing_fallback_on_wall(wall_normal: Vector3) -> Vector3:
 	var mesh_forward: Vector3 = -player.mesh_root.global_transform.basis.z

@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://combat/feel/hit_sparks.gd" id="1_hs"]
+
+[node name="HitSparks" type="GPUParticles3D"]
+script = ExtResource("1_hs")
+amount = 12
+one_shot = true
+explosiveness = 0.9
+lifetime = 0.35

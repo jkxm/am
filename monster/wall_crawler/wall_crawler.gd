@@ -53,6 +53,17 @@ signal state_changed(state: String)
 @export var ground_stay_duration: float = 6.0
 @export var decision_min: float = 0.5
 @export var decision_max: float = 1.5
+@export var aggression_multiplier: float = 1.5
+
+@export_group("Scale")
+@export var size_multiplier: float = 1.5
+
+@export_group("Player Push")
+@export var player_push_horizontal_radius: float = 2.0
+@export var player_push_max_vertical: float = 2.6
+@export var player_push_min_displacement: float = 0.35
+@export var player_push_force: float = 10.0
+@export var player_push_vertical_kick: float = 3.0
 
 @export_group("References")
 @export var player_path: NodePath
@@ -133,6 +144,13 @@ var _post_attack_override_state: String = ""
 @onready var _attack_hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
 @onready var _projectile_spawn: Marker3D = $MeshRoot/ProjectileSpawn
 @onready var _state_machine: WCStateMachine = $StateMachine
+@onready var _knockback: KnockbackComponent = get_node_or_null("Knockback")
+@onready var _menace: WCMenace = get_node_or_null("Menace")
+
+const THREAT_RETICLE_SCENE: PackedScene = preload("res://monster/wall_crawler/threat_reticle.tscn")
+var _active_reticle: ThreatReticle = null
+var _telegraph_elapsed: float = 0.0
+var _telegraph_data: WCAttackData = null
 
 @onready var _hurtbox_map: Dictionary = {
 	"torso": $Hurtboxes/TorsoHurtbox,
@@ -163,6 +181,7 @@ var _ground_anchors: Array[Marker3D] = []
 
 func _ready() -> void:
 	add_to_group(&"monsters")
+	_apply_size_multiplier()
 	_spawn_transform = global_transform
 	total_health = max_health
 	head_hp = head_break_threshold
@@ -188,6 +207,10 @@ func _ready() -> void:
 
 	_state_machine.setup(self)
 	_state_machine.state_changed.connect(_on_state_changed)
+	if _knockback != null:
+		_knockback.setup(self)
+	if _menace != null:
+		_menace.setup(self)
 	_refresh_colors()
 	health_changed.emit(total_health, max_health)
 	phase_changed.emit(phase)
@@ -199,8 +222,59 @@ func _physics_process(delta: float) -> void:
 	_update_enrage_exhaustion(delta)
 	_update_surface_stay(delta)
 	_update_state_weak_point(delta)
+	_tick_telegraph(delta)
+
+	if _knockback != null and _knockback.process(delta, self):
+		if is_on_wall_surface:
+			is_on_wall_surface = false
+			current_wall_anchor = null
+		return
 
 	_state_machine.physics_step(delta)
+	_resolve_player_overlap()
+
+func _resolve_player_overlap() -> void:
+	if player == null:
+		return
+	if _knockback != null and _knockback.is_active():
+		return
+	var to_player: Vector3 = player.global_position - global_position
+	var horizontal: Vector3 = Vector3(to_player.x, 0.0, to_player.z)
+	var h_dist: float = horizontal.length()
+	var v_dist: float = absf(to_player.y)
+	if h_dist > player_push_horizontal_radius or v_dist > player_push_max_vertical:
+		return
+
+	var push_dir: Vector3
+	if h_dist < 0.05:
+		push_dir = -_mesh_root.global_transform.basis.z
+		push_dir.y = 0.0
+		if push_dir.length() < 0.01:
+			push_dir = Vector3.FORWARD
+	else:
+		push_dir = horizontal.normalized()
+
+	var overlap: float = player_push_horizontal_radius - h_dist
+	var nudge: float = maxf(overlap + 0.1, player_push_min_displacement)
+	player.global_position += push_dir * nudge
+
+	if player.has_method("move_and_slide"):
+		var player_body: CharacterBody3D = player as CharacterBody3D
+		if player_body != null:
+			player_body.velocity.x += push_dir.x * player_push_force
+			player_body.velocity.z += push_dir.z * player_push_force
+			if to_player.y > 0.2:
+				player_body.velocity.y = maxf(player_body.velocity.y, player_push_vertical_kick)
+
+func receive_knockback(direction: Vector3, raw_force: float) -> bool:
+	if _knockback == null:
+		return false
+	if is_on_wall_surface:
+		clear_wall_cling()
+	return _knockback.apply(direction, raw_force)
+
+func knockback_component() -> KnockbackComponent:
+	return _knockback
 
 func apply_gravity(delta: float) -> void:
 	if is_on_floor():
@@ -216,15 +290,16 @@ func face_toward(direction: Vector3, weight: float) -> void:
 	flat.y = 0.0
 	if flat.length() < 0.01:
 		return
-	var target_yaw: float = atan2(flat.x, flat.z)
+	var target_yaw: float = atan2(-flat.x, -flat.z)
 	_mesh_root.rotation.y = lerp_angle(_mesh_root.rotation.y, target_yaw, clampf(turn_speed * weight, 0.0, 1.0))
 
 func decision_interval_mult() -> float:
+	var aggro: float = 1.0 / maxf(aggression_multiplier, 0.01)
 	if is_exhausted:
 		return exhaustion_decision_interval_mult
 	if is_enraged:
-		return 0.6
-	return 1.0
+		return 0.6 * aggro
+	return 1.0 * aggro
 
 func default_combat_state() -> String:
 	return "CombatWall" if is_on_wall_surface else "CombatGround"
@@ -277,17 +352,31 @@ func should_transition_to_ground() -> bool:
 	return randf() < ground_bias
 
 func begin_transition() -> Dictionary:
-	_pending_transition.clear()
 	var info: Dictionary = {}
+	var preplanned_wall_leap: bool = (
+		is_on_wall_surface
+		and _pending_transition.get("to_wall", false)
+		and _pending_transition.get("anchor", null) != null
+	)
+	if preplanned_wall_leap:
+		var leap_anchor: Marker3D = _pending_transition["anchor"] as Marker3D
+		info["target_pos"] = leap_anchor.global_position
+		info["target_basis"] = leap_anchor.global_transform.basis
+		info["duration"] = _scaled_duration(wall_to_wall_leap_duration, leap_anchor.global_position)
+		info["next_state"] = "CombatWall"
+		return info
+
+	_pending_transition.clear()
 	if is_on_wall_surface:
 		var target: Marker3D = _pick_ground_anchor()
 		if target != null:
 			info["target_pos"] = target.global_position
 			info["target_basis"] = target.global_transform.basis
+			info["duration"] = _scaled_duration(wall_to_ground_duration, target.global_position)
 		else:
 			info["target_pos"] = _spawn_transform.origin
 			info["target_basis"] = Basis.IDENTITY
-		info["duration"] = wall_to_ground_duration
+			info["duration"] = wall_to_ground_duration
 		info["next_state"] = "CombatGround"
 		_pending_transition["to_wall"] = false
 	else:
@@ -296,7 +385,7 @@ func begin_transition() -> Dictionary:
 			info["target_pos"] = anchor.global_position
 			info["target_basis"] = anchor.global_transform.basis
 			_pending_transition["anchor"] = anchor
-			info["duration"] = ground_to_wall_duration if not is_on_wall_surface else wall_to_wall_leap_duration
+			info["duration"] = _scaled_duration(ground_to_wall_duration, anchor.global_position)
 			info["next_state"] = "CombatWall"
 			_pending_transition["to_wall"] = true
 		else:
@@ -305,6 +394,14 @@ func begin_transition() -> Dictionary:
 			info["duration"] = 0.1
 			info["next_state"] = "CombatGround"
 	return info
+
+const TRANSITION_SPEED: float = 9.0  # world units per second cap
+const TRANSITION_MAX_DURATION: float = 2.2
+
+func _scaled_duration(base: float, target_pos: Vector3) -> float:
+	var dist: float = global_position.distance_to(target_pos)
+	var by_speed: float = dist / TRANSITION_SPEED
+	return clampf(maxf(base, by_speed), base, TRANSITION_MAX_DURATION)
 
 func finish_transition() -> void:
 	if _pending_transition.get("to_wall", false):
@@ -349,18 +446,83 @@ func clear_wall_cling() -> void:
 	var basis: Basis = Basis.IDENTITY
 	global_transform = Transform3D(basis, global_position)
 
+const TELEGRAPH_WARN_COLOR: Color = Color(1.0, 0.55, 0.05, 1.0)
+const TELEGRAPH_ATTACK_COLOR: Color = Color(1.0, 0.1, 0.0, 1.0)
+
 func begin_attack_telegraph(data: WCAttackData) -> void:
 	_telegraph_active = true
-	_torso_mat.albedo_color = data.telegraph_color
+	_telegraph_data = data
+	_telegraph_elapsed = 0.0
+	_torso_mat.albedo_color = TELEGRAPH_WARN_COLOR
 	_torso_mat.emission_enabled = true
-	_torso_mat.emission = data.telegraph_color
-	_torso_mat.emission_energy_multiplier = 0.6
+	_torso_mat.emission = TELEGRAPH_WARN_COLOR
+	_torso_mat.emission_energy_multiplier = 0.5
 	_mesh_root.scale = Vector3.ONE * 1.05
 	_apply_telegraph_pose(data)
+	_spawn_reticle_for(data)
+
+func _spawn_reticle_for(data: WCAttackData) -> void:
+	if data == null or player == null:
+		return
+	var wants_reticle: bool = false
+	var radius: float = 2.0
+	match data.kind:
+		WCAttackData.Kind.PROJECTILE:
+			wants_reticle = true
+			radius = data.projectile_puddle_radius
+		WCAttackData.Kind.BARRAGE:
+			wants_reticle = true
+			radius = data.projectile_puddle_radius
+		WCAttackData.Kind.DIVE:
+			wants_reticle = true
+			radius = data.dive_shockwave_radius
+	if not wants_reticle:
+		return
+	var reticle: ThreatReticle = THREAT_RETICLE_SCENE.instantiate()
+	var host: Node = get_tree().current_scene
+	if host == null:
+		host = get_parent()
+	host.add_child(reticle)
+	reticle.global_position = Vector3(player.global_position.x, _ground_y_near(player.global_position), player.global_position.z)
+	reticle.configure(player, radius, data.telegraph_time + data.active_time, Color(1.0, 0.25, 0.2, 0.55))
+	_active_reticle = reticle
+
+func _ground_y_near(from: Vector3) -> float:
+	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
+	if space == null:
+		return 0.05
+	var q := PhysicsRayQueryParameters3D.create(from + Vector3(0, 2.0, 0), from + Vector3(0, -20.0, 0), 1)
+	var r: Dictionary = space.intersect_ray(q)
+	if r.is_empty():
+		return 0.05
+	return r.position.y + 0.02
+
+func _tick_telegraph(delta: float) -> void:
+	if not _telegraph_active or _telegraph_data == null:
+		return
+	_telegraph_elapsed += delta
+	var dur: float = maxf(_telegraph_data.telegraph_time, 0.001)
+	var t: float = clampf(_telegraph_elapsed / dur, 0.0, 1.0)
+	var ramp_start: float = 0.0
+	var ramp_red: float = 0.65
+	var col: Color = TELEGRAPH_WARN_COLOR
+	if t >= ramp_red:
+		col = TELEGRAPH_ATTACK_COLOR
+	else:
+		var sub_t: float = clampf((t - ramp_start) / maxf(ramp_red - ramp_start, 0.001), 0.0, 1.0)
+		col = TELEGRAPH_WARN_COLOR.lerp(TELEGRAPH_ATTACK_COLOR, sub_t)
+	_torso_mat.albedo_color = col
+	_torso_mat.emission = col
+	_torso_mat.emission_energy_multiplier = lerpf(0.4, 0.9, t)
 
 func end_attack_telegraph() -> void:
 	_telegraph_active = false
+	_telegraph_data = null
+	_telegraph_elapsed = 0.0
 	_mesh_root.scale = Vector3.ONE
+	if _active_reticle != null and is_instance_valid(_active_reticle):
+		_active_reticle.expire()
+		_active_reticle = null
 	_refresh_colors()
 
 func _apply_telegraph_pose(data: WCAttackData) -> void:
@@ -394,7 +556,7 @@ func deactivate_attack_hitbox() -> void:
 	_attack_hitbox.deactivate()
 
 func start_cooldown(label: String, seconds: float) -> void:
-	var mult: float = 1.0
+	var mult: float = 1.0 / maxf(aggression_multiplier, 0.01)
 	if phase == 3:
 		mult *= 0.6
 	if is_enraged:
@@ -458,6 +620,56 @@ func apply_dive_shockwave(radius: float, damage: float) -> void:
 	var dist: float = global_position.distance_to(player.global_position)
 	if dist <= radius and player.has_method("take_environmental_damage"):
 		player.take_environmental_damage(damage)
+
+func _apply_size_multiplier() -> void:
+	if absf(size_multiplier - 1.0) < 0.001:
+		return
+	_scale_csg_tree(_mesh_root, size_multiplier)
+	_scale_area_tree($Hurtboxes, size_multiplier)
+	_scale_area_tree($AttackHitbox, size_multiplier)
+	var body_shape: CollisionShape3D = $CollisionShape3D
+	if body_shape != null:
+		var box: BoxShape3D = body_shape.shape as BoxShape3D
+		if box != null:
+			var new_box: BoxShape3D = box.duplicate()
+			new_box.size = box.size * size_multiplier
+			body_shape.shape = new_box
+		body_shape.transform.origin *= size_multiplier
+
+func _scale_csg_tree(root: Node, mult: float) -> void:
+	if root == null:
+		return
+	var stack: Array = [root]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n is CSGBox3D:
+			var box: CSGBox3D = n as CSGBox3D
+			box.size = box.size * mult
+			box.position = box.position * mult
+		elif n is Node3D and n != root:
+			var n3: Node3D = n as Node3D
+			n3.position = n3.position * mult
+		for c in n.get_children():
+			stack.push_back(c)
+
+func _scale_area_tree(root: Node, mult: float) -> void:
+	if root == null:
+		return
+	var stack: Array = [root]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n is CollisionShape3D:
+			var cs: CollisionShape3D = n as CollisionShape3D
+			if cs.shape is BoxShape3D:
+				var b: BoxShape3D = (cs.shape as BoxShape3D).duplicate()
+				b.size = b.size * mult
+				cs.shape = b
+			cs.transform.origin = cs.transform.origin * mult
+		elif n is Node3D and n != root:
+			var n3: Node3D = n as Node3D
+			n3.position = n3.position * mult
+		for c in n.get_children():
+			stack.push_back(c)
 
 func on_died() -> void:
 	pass
@@ -623,6 +835,10 @@ func _on_hurtbox_hit(event: DamageEvent, part_name: String) -> void:
 	total_health = maxf(0.0, total_health - amount)
 	_recent_damage += amount
 	_recent_damage_timer = enrage_damage_window
+
+	if _menace != null:
+		var flinch_dir: Vector3 = Vector3(event.direction.x, 0.0, event.direction.z)
+		_menace.flinch(flinch_dir)
 
 	var push: Vector3 = Vector3(event.direction.x, 0.0, event.direction.z)
 	if push.length() > 0.01 and not is_on_wall_surface:
@@ -825,14 +1041,14 @@ func _build_attacks() -> void:
 	bite.label = "LungeBite"
 	bite.kind = WCAttackData.Kind.MELEE
 	bite.surface = WCAttackData.Surface.GROUND
-	bite.telegraph_time = 0.5
-	bite.active_time = 0.2
-	bite.recovery_time = 0.6
+	bite.telegraph_time = 0.3
+	bite.active_time = 0.12
+	bite.recovery_time = 0.4
 	bite.damage = 45.0
 	bite.min_range = 2.0
-	bite.max_range = 6.5
-	bite.cooldown = 4.0
-	bite.advance_distance = 4.0
+	bite.max_range = 7.5
+	bite.cooldown = 2.5
+	bite.advance_distance = 5.5
 	bite.hitbox_offset = Vector3(0, 1.2, -2.8)
 	bite.hitbox_size = Vector3(1.6, 1.5, 3.0)
 	bite.telegraph_color = Color(1, 0.3, 0.15, 1)

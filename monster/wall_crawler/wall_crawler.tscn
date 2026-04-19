@@ -1,24 +1,25 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene format=3 uid="uid://dew7yd1tox85o"]
 
-[ext_resource type="Script" path="res://monster/wall_crawler/wall_crawler.gd" id="1_wc"]
-[ext_resource type="Script" path="res://monster/wall_crawler/wc_state_machine.gd" id="2_sm"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_idle.gd" id="3_idle"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_combat_ground.gd" id="4_cg"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_combat_wall.gd" id="5_cw"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_transitioning.gd" id="6_tr"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_attacking.gd" id="7_at"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_exhausted.gd" id="8_ex"]
-[ext_resource type="Script" path="res://monster/wall_crawler/states/wc_dying.gd" id="9_die"]
-[ext_resource type="Script" path="res://combat/hitbox.gd" id="10_hbox"]
-[ext_resource type="Script" path="res://combat/hurtbox.gd" id="11_hurt"]
+[ext_resource type="Script" uid="uid://5vqecseml3mn" path="res://monster/wall_crawler/wall_crawler.gd" id="1_wc"]
+[ext_resource type="Script" uid="uid://d0xa1c50wqpnj" path="res://monster/wall_crawler/wc_state_machine.gd" id="2_sm"]
+[ext_resource type="Script" uid="uid://jpwqbg8r60wf" path="res://monster/wall_crawler/states/wc_idle.gd" id="3_idle"]
+[ext_resource type="Script" uid="uid://df4aqwc4cxh3q" path="res://monster/wall_crawler/states/wc_combat_ground.gd" id="4_cg"]
+[ext_resource type="Script" uid="uid://b4tnaihtjlqor" path="res://monster/wall_crawler/states/wc_combat_wall.gd" id="5_cw"]
+[ext_resource type="Script" uid="uid://cu7v14if1o6gc" path="res://monster/wall_crawler/states/wc_transitioning.gd" id="6_tr"]
+[ext_resource type="Script" uid="uid://dgadok84io6pf" path="res://monster/wall_crawler/states/wc_attacking.gd" id="7_at"]
+[ext_resource type="Script" uid="uid://ct7rry2sgkagg" path="res://monster/wall_crawler/states/wc_exhausted.gd" id="8_ex"]
+[ext_resource type="Script" uid="uid://bcoyq6aliyiho" path="res://monster/wall_crawler/states/wc_dying.gd" id="9_die"]
+[ext_resource type="Script" uid="uid://bdoer340ftx8a" path="res://combat/hitbox.gd" id="10_hbox"]
+[ext_resource type="Script" uid="uid://bonhk2yshr0rh" path="res://combat/hurtbox.gd" id="11_hurt"]
 [ext_resource type="PackedScene" path="res://monster/wall_crawler/acid_projectile.tscn" id="12_proj"]
 [ext_resource type="PackedScene" path="res://monster/wall_crawler/acid_puddle.tscn" id="13_pud"]
+[ext_resource type="Script" uid="uid://c4q3emksfpjdh" path="res://monster/knockback_component.gd" id="14_kb"]
+[ext_resource type="Script" path="res://monster/wall_crawler/wc_menace.gd" id="15_menace"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_body"]
 size = Vector3(3.2, 1.6, 3.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(1.0, 1.0, 1.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_torso_hurt"]
 size = Vector3(2.6, 1.3, 3.1)
@@ -36,197 +37,206 @@ size = Vector3(0.5, 0.5, 2.6)
 size = Vector3(2.2, 0.35, 2.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_back_hurt"]
-size = Vector3(2.0, 0.35, 2.2)
+size = Vector3(2, 0.35, 2.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_throat_hurt"]
 size = Vector3(0.9, 0.35, 0.9)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_tail_hurt"]
-size = Vector3(0.55, 0.55, 2.1)
-
-[node name="WallCrawler" type="CharacterBody3D"]
+[node name="WallCrawler" type="CharacterBody3D" unique_id=2028486620]
 collision_layer = 8
-collision_mask = 1
 script = ExtResource("1_wc")
+max_health = 1200.0
+ground_walk_speed = 4.0
+wall_crawl_speed = 10.0
+ground_to_wall_duration = 0.5
+wall_to_wall_leap_duration = 0.2
+aggression_multiplier = 2.0
 acid_projectile_scene = ExtResource("12_proj")
 acid_puddle_scene = ExtResource("13_pud")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1309711838]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_body")
 
-[node name="MeshRoot" type="Node3D" parent="."]
+[node name="MeshRoot" type="Node3D" parent="." unique_id=1934527569]
 
-[node name="Torso" type="CSGBox3D" parent="MeshRoot"]
+[node name="Torso" type="CSGBox3D" parent="MeshRoot" unique_id=274799957]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
-size = Vector3(2.5, 1.2, 3.0)
+size = Vector3(2.5, 1.2, 3)
 
-[node name="Head" type="CSGBox3D" parent="MeshRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)
+[node name="Head" type="CSGBox3D" parent="MeshRoot" unique_id=1340627455]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -2.1)
 size = Vector3(1.2, 0.8, 1.5)
 
-[node name="MandibleLeft" type="CSGBox3D" parent="MeshRoot"]
+[node name="MandibleLeft" type="CSGBox3D" parent="MeshRoot" unique_id=1226802407]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.85, -2.8)
 size = Vector3(0.3, 0.3, 0.8)
 
-[node name="MandibleRight" type="CSGBox3D" parent="MeshRoot"]
+[node name="MandibleRight" type="CSGBox3D" parent="MeshRoot" unique_id=2067382353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.85, -2.8)
 size = Vector3(0.3, 0.3, 0.8)
 
-[node name="BackPlateLeft" type="CSGBox3D" parent="MeshRoot"]
+[node name="BackPlateLeft" type="CSGBox3D" parent="MeshRoot" unique_id=1018287821]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.85, -0.3)
-size = Vector3(1.0, 0.3, 1.2)
+size = Vector3(1, 0.3, 1.2)
 
-[node name="BackPlateRight" type="CSGBox3D" parent="MeshRoot"]
+[node name="BackPlateRight" type="CSGBox3D" parent="MeshRoot" unique_id=775606422]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.85, -0.3)
-size = Vector3(1.0, 0.3, 1.2)
+size = Vector3(1, 0.3, 1.2)
 
-[node name="LegFrontLeft" type="CSGBox3D" parent="MeshRoot"]
+[node name="LegFrontLeft" type="CSGBox3D" parent="MeshRoot" unique_id=458861051]
 transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, -1.7, 0.5, -0.9)
 size = Vector3(0.4, 0.4, 2.5)
 
-[node name="LegFrontRight" type="CSGBox3D" parent="MeshRoot"]
+[node name="LegFrontRight" type="CSGBox3D" parent="MeshRoot" unique_id=2002786275]
 transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, 1.7, 0.5, -0.9)
 size = Vector3(0.4, 0.4, 2.5)
 
-[node name="LegRearLeft" type="CSGBox3D" parent="MeshRoot"]
-transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1.0)
+[node name="LegRearLeft" type="CSGBox3D" parent="MeshRoot" unique_id=1971841711]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1)
 size = Vector3(0.4, 0.4, 2.5)
 
-[node name="LegRearRight" type="CSGBox3D" parent="MeshRoot"]
-transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1.0)
+[node name="LegRearRight" type="CSGBox3D" parent="MeshRoot" unique_id=1294659746]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1)
 size = Vector3(0.4, 0.4, 2.5)
 
-[node name="Tail" type="CSGBox3D" parent="MeshRoot"]
+[node name="Tail" type="CSGBox3D" parent="MeshRoot" unique_id=1720656690]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.3)
-size = Vector3(0.5, 0.5, 2.0)
+size = Vector3(0.5, 0.5, 2)
 
-[node name="BellyWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+[node name="BellyWeakPoint" type="CSGBox3D" parent="MeshRoot" unique_id=1157878050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-size = Vector3(2.0, 0.15, 2.2)
+size = Vector3(2, 0.15, 2.2)
 
-[node name="BackWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+[node name="BackWeakPoint" type="CSGBox3D" parent="MeshRoot" unique_id=1019963607]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.76, -0.3)
-size = Vector3(1.8, 0.15, 2.0)
+size = Vector3(1.8, 0.15, 2)
 
-[node name="ThroatWeakPoint" type="CSGBox3D" parent="MeshRoot"]
+[node name="ThroatWeakPoint" type="CSGBox3D" parent="MeshRoot" unique_id=750147229]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.1)
 size = Vector3(0.8, 0.1, 0.8)
 
-[node name="ProjectileSpawn" type="Marker3D" parent="MeshRoot"]
+[node name="ProjectileSpawn" type="Marker3D" parent="MeshRoot" unique_id=1943129073]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -2.9)
 
-[node name="AttackHitbox" type="Area3D" parent="."]
+[node name="AttackHitbox" type="Area3D" parent="." unique_id=673671488]
 collision_layer = 4
 collision_mask = 2
 script = ExtResource("10_hbox")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackHitbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackHitbox" unique_id=1123860628]
 shape = SubResource("BoxShape3D_hitbox")
 
-[node name="Hurtboxes" type="Node3D" parent="."]
+[node name="Hurtboxes" type="Node3D" parent="." unique_id=1836778408]
 
-[node name="TorsoHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="TorsoHurtbox" type="Area3D" parent="Hurtboxes" unique_id=104113848]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/TorsoHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/TorsoHurtbox" unique_id=2011909882]
 shape = SubResource("BoxShape3D_torso_hurt")
 
-[node name="HeadHurtbox" type="Area3D" parent="Hurtboxes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)
+[node name="HeadHurtbox" type="Area3D" parent="Hurtboxes" unique_id=1690797688]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -2.1)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/HeadHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/HeadHurtbox" unique_id=321059686]
 shape = SubResource("BoxShape3D_head_hurt")
 
-[node name="BackPlateLeftHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="BackPlateLeftHurtbox" type="Area3D" parent="Hurtboxes" unique_id=227543481]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.85, -0.3)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateLeftHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateLeftHurtbox" unique_id=2038903315]
 shape = SubResource("BoxShape3D_plate_hurt")
 
-[node name="BackPlateRightHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="BackPlateRightHurtbox" type="Area3D" parent="Hurtboxes" unique_id=191640661]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.85, -0.3)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateRightHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackPlateRightHurtbox" unique_id=1491604158]
 shape = SubResource("BoxShape3D_plate_hurt")
 
-[node name="RearLegLeftHurtbox" type="Area3D" parent="Hurtboxes"]
-transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1.0)
+[node name="RearLegLeftHurtbox" type="Area3D" parent="Hurtboxes" unique_id=1709568045]
+transform = Transform3D(0.9659, 0, 0.2588, 0, 1, 0, -0.2588, 0, 0.9659, -1.7, 0.5, 1)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegLeftHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegLeftHurtbox" unique_id=1299351613]
 shape = SubResource("BoxShape3D_leg_hurt")
 
-[node name="RearLegRightHurtbox" type="Area3D" parent="Hurtboxes"]
-transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1.0)
+[node name="RearLegRightHurtbox" type="Area3D" parent="Hurtboxes" unique_id=1998203756]
+transform = Transform3D(0.9659, 0, -0.2588, 0, 1, 0, 0.2588, 0, 0.9659, 1.7, 0.5, 1)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegRightHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/RearLegRightHurtbox" unique_id=1166630660]
 shape = SubResource("BoxShape3D_leg_hurt")
 
-[node name="BellyHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="BellyHurtbox" type="Area3D" parent="Hurtboxes" unique_id=696309050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BellyHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BellyHurtbox" unique_id=589583250]
 shape = SubResource("BoxShape3D_belly_hurt")
 
-[node name="BackHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="BackHurtbox" type="Area3D" parent="Hurtboxes" unique_id=764989684]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.76, -0.3)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/BackHurtbox" unique_id=1766362245]
 shape = SubResource("BoxShape3D_back_hurt")
 
-[node name="ThroatHurtbox" type="Area3D" parent="Hurtboxes"]
+[node name="ThroatHurtbox" type="Area3D" parent="Hurtboxes" unique_id=1003190054]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.1)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("11_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/ThroatHurtbox"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtboxes/ThroatHurtbox" unique_id=138696864]
 shape = SubResource("BoxShape3D_throat_hurt")
 
-[node name="StateMachine" type="Node" parent="."]
+[node name="StateMachine" type="Node" parent="." unique_id=1658130505]
 script = ExtResource("2_sm")
 
-[node name="Idle" type="Node" parent="StateMachine"]
+[node name="Idle" type="Node" parent="StateMachine" unique_id=202447429]
 script = ExtResource("3_idle")
 
-[node name="CombatGround" type="Node" parent="StateMachine"]
+[node name="CombatGround" type="Node" parent="StateMachine" unique_id=227228053]
 script = ExtResource("4_cg")
 
-[node name="CombatWall" type="Node" parent="StateMachine"]
+[node name="CombatWall" type="Node" parent="StateMachine" unique_id=1353845212]
 script = ExtResource("5_cw")
 
-[node name="Transitioning" type="Node" parent="StateMachine"]
+[node name="Transitioning" type="Node" parent="StateMachine" unique_id=1891338949]
 script = ExtResource("6_tr")
 
-[node name="Attacking" type="Node" parent="StateMachine"]
+[node name="Attacking" type="Node" parent="StateMachine" unique_id=1118360667]
 script = ExtResource("7_at")
 
-[node name="Exhausted" type="Node" parent="StateMachine"]
+[node name="Exhausted" type="Node" parent="StateMachine" unique_id=962120274]
 script = ExtResource("8_ex")
 
-[node name="Dying" type="Node" parent="StateMachine"]
+[node name="Dying" type="Node" parent="StateMachine" unique_id=26628532]
 script = ExtResource("9_die")
+
+[node name="Knockback" type="Node" parent="." unique_id=650788459]
+script = ExtResource("14_kb")
+base_resistance = 0.5
+
+[node name="Menace" type="Node" parent="." unique_id=605765225]
+script = ExtResource("15_menace")

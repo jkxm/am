@@ -1,4 +1,6 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://arena/arena_scaler.gd" id="1_scaler"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -63,6 +65,7 @@ size = Vector3(0.6, 4, 10)
 size = Vector3(0.6, 4, 10)
 
 [node name="TestArena" type="Node3D"]
+script = ExtResource("1_scaler")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_env")

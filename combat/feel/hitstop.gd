@@ -21,6 +21,14 @@ func pulse(duration_ms: float, scale: float = 0.05) -> void:
 
 func _process(_delta: float) -> void:
 	if abs(Engine.time_scale - 1.0) > 0.001 and _now() > _active_until_real + 0.5:
+		var slowmo_active: bool = false
+		if Engine.has_singleton("Slowmo"):
+			slowmo_active = true
+		var slowmo_node: Node = get_node_or_null("/root/Slowmo")
+		if slowmo_node != null and slowmo_node.has_method("is_active") and slowmo_node.call("is_active"):
+			slowmo_active = true
+		if slowmo_active:
+			return
 		push_warning("[Hitstop] time_scale stuck at %.2f (expected 1.0) beyond active_until=%.2f, now=%.2f — forcing restore" % [Engine.time_scale, _active_until_real, _now()])
 		Engine.time_scale = 1.0
 

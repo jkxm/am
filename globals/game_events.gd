@@ -15,3 +15,8 @@ signal player_health_changed(current: float, maximum: float)
 signal player_died
 signal player_landed_hit(damage: float)
 signal player_took_hit(damage: float, armored: bool)
+signal player_hit_landed_at(point: Vector3, normal: Vector3, charge_level: int)
+signal player_charge_level_changed(level: int, progress: float)
+signal player_charge_released
+signal player_slam_impact(point: Vector3, radius: float)
+signal player_knockback_delivered(point: Vector3, direction: Vector3, effective_force: float, resisted: bool, charge_level: int)

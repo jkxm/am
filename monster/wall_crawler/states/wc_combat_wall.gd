@@ -3,6 +3,7 @@ extends WCState
 @export var min_decision_interval: float = 0.5
 @export var max_decision_interval: float = 1.5
 @export var reposition_chance: float = 0.35
+@export var reposition_min_stay: float = 3.5
 
 var _decision_timer: float = 0.0
 
@@ -29,7 +30,7 @@ func _pick_next_action() -> void:
 		monster.pending_attack = attack
 		machine.change_to("Attacking")
 		return
-	if randf() < reposition_chance:
+	if monster._surface_stay_timer >= reposition_min_stay and randf() < reposition_chance:
 		monster.pick_new_wall_anchor()
 		machine.change_to("Transitioning")
 		return

@@ -1,6 +1,6 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://tex54wuv60gm"]
 
-[ext_resource type="Script" path="res://monster/wall_crawler/acid_projectile.gd" id="1_proj"]
+[ext_resource type="Script" uid="uid://ck7usaiavovoq" path="res://monster/wall_crawler/acid_projectile.gd" id="1_proj"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_proj"]
 radius = 0.25
@@ -8,21 +8,20 @@ radius = 0.25
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_proj"]
 albedo_color = Color(0.3, 0.9, 0.15, 1)
 emission_enabled = true
-emission = Color(0.35, 1.0, 0.15, 1)
+emission = Color(0.35, 1, 0.15, 1)
 emission_energy_multiplier = 1.2
 
-[node name="AcidProjectile" type="Node3D"]
+[node name="AcidProjectile" type="Node3D" unique_id=1699295063]
 script = ExtResource("1_proj")
+speed = 30.0
 
-[node name="Area3D" type="Area3D" parent="."]
+[node name="Area3D" type="Area3D" parent="." unique_id=1197495096]
 collision_layer = 0
 collision_mask = 3
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=678770867]
 shape = SubResource("SphereShape3D_proj")
 
-[node name="Visual" type="CSGSphere3D" parent="."]
+[node name="Visual" type="CSGSphere3D" parent="." unique_id=164414693]
 radius = 0.25
-radial_segments = 12
-rings = 6
 material = SubResource("StandardMaterial3D_proj")

@@ -123,15 +123,23 @@ func _update_dive(delta: float) -> void:
 		monster.clear_wall_cling()
 	if _dive_started and not _dive_landed:
 		var to_target: Vector3 = _dive_target - monster.global_position
+		var distance: float = to_target.length()
 		var step: float = _data.dive_speed * delta
-		if to_target.length() <= step + 0.3:
-			monster.global_position = _dive_target + Vector3(0, 0.1, 0)
+		if distance <= step + 0.3:
+			monster.velocity = Vector3.ZERO
+			monster.move_and_slide()
 			_dive_landed = true
 			_apply_dive_shockwave()
 			if _data.exposes_belly_on_recovery:
 				monster.open_state_weak_point(monster.belly_post_dive_duration)
 		else:
-			monster.global_position += to_target.normalized() * step
+			monster.velocity = to_target.normalized() * _data.dive_speed
+			monster.move_and_slide()
+			if monster.get_slide_collision_count() > 0 and distance > 0.6:
+				_dive_landed = true
+				_apply_dive_shockwave()
+				if _data.exposes_belly_on_recovery:
+					monster.open_state_weak_point(monster.belly_post_dive_duration)
 	elif _dive_landed:
 		monster.apply_gravity(delta)
 		monster.velocity.x = move_toward(monster.velocity.x, 0.0, 40.0 * delta)

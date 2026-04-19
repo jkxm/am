@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dhdy36upsr2kq"]
 
 [ext_resource type="Script" uid="uid://bdmb6lsvox272" path="res://player/player.gd" id="1_player"]
-[ext_resource type="Script" path="res://player/animation/y_bot_animator.gd" id="99_ybot"]
 [ext_resource type="Script" uid="uid://dwdqhe7kgy10q" path="res://player/resources/enhanced_resource.gd" id="2b_enh"]
 [ext_resource type="Script" uid="uid://b2qy6pixcowt1" path="res://player/resources/stamina.gd" id="2_stamina"]
 [ext_resource type="Script" uid="uid://dlvssb0iss03i" path="res://player/states/state_machine.gd" id="3_sm"]
@@ -16,53 +15,33 @@
 [ext_resource type="Script" uid="uid://by6sagm80u4dy" path="res://player/states/attack.gd" id="7g_atk"]
 [ext_resource type="Script" uid="uid://lqueu5kw571f" path="res://player/states/charge_attack.gd" id="7h_chg"]
 [ext_resource type="Script" uid="uid://yjwmel5nonun" path="res://player/states/aerial_attack.gd" id="7i_aer"]
-[ext_resource type="Script" path="res://player/states/charge_wall_attack.gd" id="7j_chgw"]
+[ext_resource type="Script" uid="uid://b8eybfr07de6o" path="res://player/states/charge_wall_attack.gd" id="7j_chgw"]
+[ext_resource type="Script" uid="uid://bi2sdsqpv11cj" path="res://player/states/stagger.gd" id="7k_stagger"]
 [ext_resource type="Script" uid="uid://cmdpqfvqvipxk" path="res://player/states/dodge_roll.gd" id="7_dodge"]
 [ext_resource type="Script" uid="uid://3espsy6td6f5" path="res://player/movement/wall_detector.gd" id="9_wdet"]
 [ext_resource type="Script" uid="uid://dmys8ksqyxyfd" path="res://player/weapons/heavy_weapon.gd" id="10_hwpn"]
 [ext_resource type="Script" uid="uid://bdoer340ftx8a" path="res://combat/hitbox.gd" id="11_hbox"]
-[ext_resource type="Script" path="res://combat/hurtbox.gd" id="12_hurt"]
-[ext_resource type="Script" path="res://player/damage/armor.gd" id="13_armor"]
-[ext_resource type="Script" path="res://player/damage/health.gd" id="14_health"]
-[ext_resource type="Script" path="res://player/states/stagger.gd" id="7k_stagger"]
+[ext_resource type="Script" uid="uid://bonhk2yshr0rh" path="res://combat/hurtbox.gd" id="12_hurt"]
+[ext_resource type="Script" uid="uid://ce67ok6q0waq7" path="res://player/damage/armor.gd" id="13_armor"]
+[ext_resource type="Script" uid="uid://b7hyr4oxyn7ls" path="res://player/damage/health.gd" id="14_health"]
 [ext_resource type="PackedScene" path="res://player/weapons/trajectory_preview.tscn" id="15_traj"]
+[ext_resource type="Script" uid="uid://dw0ypbm7hdk23" path="res://player/animation/y_bot_animator.gd" id="99_ybot"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
 height = 1.8
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.4
-height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
-albedo_color = Color(0.8, 0.55, 0.3, 1)
-roughness = 0.7
-
-[sub_resource type="BoxMesh" id="BoxMesh_face"]
-size = Vector3(0.25, 0.1, 0.05)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_face"]
-albedo_color = Color(1, 0.95, 0.3, 1)
-roughness = 0.6
-
-[sub_resource type="BoxMesh" id="BoxMesh_sword"]
-size = Vector3(0.12, 1.8, 0.18)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sword"]
-albedo_color = Color(0.7, 0.75, 0.85, 1)
-metallic = 0.7
-roughness = 0.3
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
 size = Vector3(1.8, 1.6, 1.6)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurt"]
-radius = 0.5
-height = 2.0
 
 [node name="Player" type="CharacterBody3D" unique_id=1475440242]
 script = ExtResource("1_player")
+walk_speed = 3.0
+sprint_speed = 6.5
+jump_velocity = 10.0
+gravity = 30.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=536123363]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -70,8 +49,10 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="MeshRoot" type="Node3D" parent="." unique_id=57905772]
 
-[node name="YBotAnimator" type="Node3D" parent="MeshRoot"]
+[node name="YBotAnimator" type="Node3D" parent="MeshRoot" unique_id=672875077]
 script = ExtResource("99_ybot")
+sword_grip_rotation_deg = Vector3(0, 0, 0)
+sword_blade_size = Vector3(0.4, 1.5, 0.05)
 player_path = NodePath("../..")
 
 [node name="HeavyWeapon" type="Node3D" parent="MeshRoot" unique_id=1650899274]
@@ -92,21 +73,21 @@ drain_rate = 15.0
 [node name="EnhancedResource" type="Node" parent="." unique_id=1638383654]
 script = ExtResource("2b_enh")
 
-[node name="Armor" type="Node" parent="."]
+[node name="Armor" type="Node" parent="." unique_id=1647154172]
 script = ExtResource("13_armor")
 
-[node name="Health" type="Node" parent="."]
+[node name="Health" type="Node" parent="." unique_id=2101835461]
 script = ExtResource("14_health")
 
-[node name="TrajectoryPreview" parent="." instance=ExtResource("15_traj")]
+[node name="TrajectoryPreview" parent="." unique_id=813740791 instance=ExtResource("15_traj")]
 
-[node name="Hurtbox" type="Area3D" parent="."]
+[node name="Hurtbox" type="Area3D" parent="." unique_id=558697773]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("12_hurt")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=551394303]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_hurt")
 
 [node name="WallDetector" type="Node3D" parent="." unique_id=1655787004]
@@ -130,7 +111,7 @@ script = ExtResource("7_dodge")
 
 [node name="WallRun" type="Node" parent="StateMachine" unique_id=873717690]
 script = ExtResource("7b_wrun")
-wall_run_speed = 11.0
+wall_run_speed = 5.0
 stamina_drain_per_sec = 10.0
 
 [node name="WallCling" type="Node" parent="StateMachine" unique_id=481636994]
@@ -147,7 +128,8 @@ dash_distance = 4.0
 
 [node name="AirDash" type="Node" parent="StateMachine" unique_id=203748982]
 script = ExtResource("7f_adash")
-dash_distance = 5.0
+dash_distance = 4.0
+dash_duration = 0.35
 
 [node name="Attack" type="Node" parent="StateMachine" unique_id=41642772]
 script = ExtResource("7g_atk")
@@ -158,8 +140,8 @@ script = ExtResource("7h_chg")
 [node name="AerialAttack" type="Node" parent="StateMachine" unique_id=255454112]
 script = ExtResource("7i_aer")
 
-[node name="ChargeWallAttack" type="Node" parent="StateMachine"]
+[node name="ChargeWallAttack" type="Node" parent="StateMachine" unique_id=868789622]
 script = ExtResource("7j_chgw")
 
-[node name="Stagger" type="Node" parent="StateMachine"]
+[node name="Stagger" type="Node" parent="StateMachine" unique_id=1567286085]
 script = ExtResource("7k_stagger")

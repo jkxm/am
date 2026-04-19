@@ -52,7 +52,7 @@ func physics_step(delta: float) -> void:
 	var wall_normal: Vector3 = player.wall_detector.wall_normal()
 	_update_axes(wall_normal, delta)
 
-	var move_dir: Vector3 = _wall_right * move_input.x + _wall_forward * move_input.y
+	var move_dir: Vector3 = _wall_forward * move_input.y + _wall_right * move_input.x
 	if move_dir.length() > 0.01:
 		move_dir = move_dir.normalized()
 
@@ -69,43 +69,41 @@ func physics_step(delta: float) -> void:
 	player.move_and_slide()
 
 func _initialize_axes(wall_normal: Vector3) -> void:
-	var target: Vector3 = _compute_target_forward(wall_normal)
-	if target.length() > 0.01:
-		_wall_forward = target
-	else:
+	var axes: Array[Vector3] = _compute_screen_axes(wall_normal)
+	_wall_forward = axes[0] if axes[0].length() > 0.01 else _fallback_forward(wall_normal)
+	_wall_right = axes[1] if axes[1].length() > 0.01 else _wall_forward.cross(wall_normal).normalized()
+
+func _update_axes(wall_normal: Vector3, _delta: float) -> void:
+	var axes: Array[Vector3] = _compute_screen_axes(wall_normal)
+	if axes[0].length() > 0.01:
+		_wall_forward = axes[0]
+	elif _wall_forward.length() < 0.01:
 		_wall_forward = _fallback_forward(wall_normal)
-	_wall_right = _wall_forward.cross(wall_normal).normalized()
+	if axes[1].length() > 0.01:
+		_wall_right = axes[1]
+	elif _wall_right.length() < 0.01:
+		_wall_right = _wall_forward.cross(wall_normal).normalized()
 
-func _update_axes(wall_normal: Vector3, delta: float) -> void:
-	var target: Vector3 = _compute_target_forward(wall_normal)
-	if target.length() < 0.01:
-		target = _wall_forward if _wall_forward.length() > 0.01 else _fallback_forward(wall_normal)
-
-	if _wall_forward.length() < 0.01:
-		_wall_forward = target
-	else:
-		var angle_deg: float = rad_to_deg(_wall_forward.angle_to(target))
-		if angle_deg > axis_deadband_deg:
-			var t: float = clampf(axis_lerp_speed * delta, 0.0, 1.0)
-			_wall_forward = _wall_forward.slerp(target, t).normalized()
-
-	var projected: Vector3 = _wall_forward - wall_normal * _wall_forward.dot(wall_normal)
-	if projected.length() > 0.01:
-		_wall_forward = projected.normalized()
-	_wall_right = _wall_forward.cross(wall_normal).normalized()
-
-func _compute_target_forward(wall_normal: Vector3) -> Vector3:
-	var cam_forward: Vector3 = player.camera_rig.get_camera_forward()
-	var forward_on_wall: Vector3 = cam_forward - wall_normal * cam_forward.dot(wall_normal)
-	if forward_on_wall.length() >= dead_zone:
-		return forward_on_wall.normalized()
-
+# Screen-space wall axes: project camera UP and camera RIGHT onto the wall plane.
+# Stick-up then maps to "up on screen" regardless of camera yaw.
+func _compute_screen_axes(wall_normal: Vector3) -> Array[Vector3]:
+	var cam_up: Vector3 = player.camera_rig.get_camera_up()
 	var cam_right: Vector3 = player.camera_rig.get_camera_right()
-	var right_on_wall: Vector3 = cam_right - wall_normal * cam_right.dot(wall_normal)
-	if right_on_wall.length() >= dead_zone:
-		return wall_normal.cross(right_on_wall.normalized()).normalized()
 
-	return Vector3.ZERO
+	var wall_forward: Vector3 = cam_up - wall_normal * cam_up.dot(wall_normal)
+	var wall_right: Vector3 = cam_right - wall_normal * cam_right.dot(wall_normal)
+
+	if wall_forward.length() >= dead_zone:
+		wall_forward = wall_forward.normalized()
+	else:
+		wall_forward = Vector3.ZERO
+
+	if wall_right.length() >= dead_zone:
+		wall_right = wall_right.normalized()
+	else:
+		wall_right = Vector3.ZERO
+
+	return [wall_forward, wall_right]
 
 func _fallback_forward(wall_normal: Vector3) -> Vector3:
 	var up_on_wall: Vector3 = Vector3.UP - wall_normal * Vector3.UP.dot(wall_normal)

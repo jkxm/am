@@ -88,6 +88,38 @@ var _time_since_pitch_input: float = 999.0
 var _mouse_events_since_log: int = 0
 var _last_input_log: float = 0.0
 
+@export_group("Cinematic Hit")
+@export var cinematic_min_charge_level: int = 2
+@export var cinematic_cooldown: float = 3.0
+@export var cinematic_l2_zoom_amount: float = 0.55
+@export var cinematic_l2_zoom_in_duration: float = 0.05
+@export var cinematic_l2_hold_duration: float = 0.06
+@export var cinematic_l2_zoom_out_duration: float = 0.28
+@export var cinematic_l2_fov_punch: float = -8.0
+@export var cinematic_l3_zoom_amount: float = 0.75
+@export var cinematic_l3_zoom_in_duration: float = 0.06
+@export var cinematic_l3_hold_duration: float = 0.11
+@export var cinematic_l3_zoom_out_duration: float = 0.4
+@export var cinematic_l3_fov_punch: float = -15.0
+@export var cinematic_fov_overshoot: float = 4.0
+@export var cinematic_fov_overshoot_duration: float = 0.15
+@export var cinematic_look_at_monster_bias: float = 0.3
+
+enum CinematicPhase { NONE, ZOOM_IN, HOLD, ZOOM_OUT, OVERSHOOT }
+
+var _cinematic_phase: int = CinematicPhase.NONE
+var _cinematic_phase_time: float = 0.0
+var _cinematic_zoom_in_dur: float = 0.05
+var _cinematic_hold_dur: float = 0.1
+var _cinematic_zoom_out_dur: float = 0.3
+var _cinematic_fov_punch: float = -10.0
+var _cinematic_zoom_amount: float = 0.7
+var _cinematic_cooldown_timer: float = 0.0
+var _cinematic_hit_point: Vector3 = Vector3.ZERO
+var _cinematic_target_pos: Vector3 = Vector3.ZERO
+var _cinematic_captured_pos: Vector3 = Vector3.ZERO
+var _cinematic_fov_offset: float = 0.0
+
 func _ready() -> void:
 	if player_path != NodePath():
 		_player = get_node_or_null(player_path) as Node3D
@@ -144,7 +176,13 @@ func _process(delta: float) -> void:
 	_apply_pitch_bias(delta)
 	_apply_pitch_clamp()
 	_apply_fov(delta)
+	_apply_cinematic(_get_unscaled_delta(delta))
 	_apply_shake(delta)
+
+func _get_unscaled_delta(delta: float) -> float:
+	if Engine.time_scale > 0.001:
+		return delta / Engine.time_scale
+	return delta
 	var now: float = Time.get_ticks_msec() / 1000.0
 	if now - _last_input_log > 1.0:
 		_last_input_log = now
@@ -178,6 +216,9 @@ func get_camera_forward() -> Vector3:
 func get_camera_right() -> Vector3:
 	return _camera.global_transform.basis.x
 
+func get_camera_up() -> Vector3:
+	return _camera.global_transform.basis.y
+
 func get_yaw_basis() -> Basis:
 	return _yaw.global_transform.basis
 
@@ -189,6 +230,103 @@ func get_camera_node() -> Camera3D:
 
 func shake(amplitude: float) -> void:
 	_shake_amplitude = maxf(_shake_amplitude, amplitude)
+
+func trigger_cinematic_hit(hit_point: Vector3, charge_level: int) -> bool:
+	if charge_level < cinematic_min_charge_level:
+		return false
+	if _cinematic_phase != CinematicPhase.NONE:
+		return false
+	if _cinematic_cooldown_timer > 0.0:
+		return false
+	var level: int = clampi(charge_level, 2, 3)
+	match level:
+		2:
+			_cinematic_zoom_amount = cinematic_l2_zoom_amount
+			_cinematic_zoom_in_dur = cinematic_l2_zoom_in_duration
+			_cinematic_hold_dur = cinematic_l2_hold_duration
+			_cinematic_zoom_out_dur = cinematic_l2_zoom_out_duration
+			_cinematic_fov_punch = cinematic_l2_fov_punch
+		_:
+			_cinematic_zoom_amount = cinematic_l3_zoom_amount
+			_cinematic_zoom_in_dur = cinematic_l3_zoom_in_duration
+			_cinematic_hold_dur = cinematic_l3_hold_duration
+			_cinematic_zoom_out_dur = cinematic_l3_zoom_out_duration
+			_cinematic_fov_punch = cinematic_l3_fov_punch
+	_cinematic_hit_point = hit_point
+	_cinematic_captured_pos = _camera.global_position
+	var direction: Vector3 = hit_point - _cinematic_captured_pos
+	if direction.length() < 0.1:
+		return false
+	_cinematic_target_pos = _cinematic_captured_pos + direction * _cinematic_zoom_amount
+	_cinematic_phase = CinematicPhase.ZOOM_IN
+	_cinematic_phase_time = 0.0
+	_cinematic_fov_offset = 0.0
+	_cinematic_cooldown_timer = cinematic_cooldown
+	return true
+
+func _apply_cinematic(delta: float) -> void:
+	if _cinematic_cooldown_timer > 0.0:
+		_cinematic_cooldown_timer = maxf(0.0, _cinematic_cooldown_timer - delta)
+	if _cinematic_phase == CinematicPhase.NONE:
+		return
+
+	_cinematic_phase_time += delta
+	var blend: float = 0.0
+	var fov_blend: float = 0.0
+
+	match _cinematic_phase:
+		CinematicPhase.ZOOM_IN:
+			var dur: float = maxf(_cinematic_zoom_in_dur, 0.001)
+			var t: float = clampf(_cinematic_phase_time / dur, 0.0, 1.0)
+			blend = 1.0 - pow(1.0 - t, 3.0)
+			fov_blend = blend
+			if _cinematic_phase_time >= _cinematic_zoom_in_dur:
+				_cinematic_phase = CinematicPhase.HOLD
+				_cinematic_phase_time = 0.0
+		CinematicPhase.HOLD:
+			blend = 1.0
+			fov_blend = 1.0
+			if _cinematic_phase_time >= _cinematic_hold_dur:
+				_cinematic_phase = CinematicPhase.ZOOM_OUT
+				_cinematic_phase_time = 0.0
+		CinematicPhase.ZOOM_OUT:
+			var dur2: float = maxf(_cinematic_zoom_out_dur, 0.001)
+			var t2: float = clampf(_cinematic_phase_time / dur2, 0.0, 1.0)
+			var smooth: float = t2 * t2 * (3.0 - 2.0 * t2)
+			blend = 1.0 - smooth
+			fov_blend = blend
+			if _cinematic_phase_time >= _cinematic_zoom_out_dur:
+				_cinematic_phase = CinematicPhase.OVERSHOOT
+				_cinematic_phase_time = 0.0
+		CinematicPhase.OVERSHOOT:
+			var dur3: float = maxf(cinematic_fov_overshoot_duration, 0.001)
+			var t3: float = clampf(_cinematic_phase_time / dur3, 0.0, 1.0)
+			blend = 0.0
+			fov_blend = 0.0
+			var arc: float = sin(t3 * PI)
+			_cinematic_fov_offset = cinematic_fov_overshoot * arc
+			if _cinematic_phase_time >= cinematic_fov_overshoot_duration:
+				_end_cinematic()
+				return
+			_camera.fov = _target_fov() + _cinematic_fov_offset
+			return
+
+	_cinematic_fov_offset = _cinematic_fov_punch * fov_blend
+
+	if blend > 0.001:
+		var normal_pos: Vector3 = _camera.global_position
+		var blended: Vector3 = normal_pos.lerp(_cinematic_target_pos, blend)
+		_camera.global_position = blended
+		_camera.look_at(_cinematic_hit_point, Vector3.UP)
+	else:
+		_camera.rotation = Vector3.ZERO
+	_camera.fov = _target_fov() + _cinematic_fov_offset
+
+func _end_cinematic() -> void:
+	_cinematic_phase = CinematicPhase.NONE
+	_cinematic_fov_offset = 0.0
+	_camera.rotation = Vector3.ZERO
+	_camera.fov = _target_fov()
 
 func current_context() -> StringName:
 	return _current_context
@@ -369,6 +507,8 @@ func _apply_pitch_clamp() -> void:
 	_pitch.rotation.x = clampf(_pitch.rotation.x, deg_to_rad(pitch_min_deg), deg_to_rad(pitch_max_deg))
 
 func _apply_fov(delta: float) -> void:
+	if _cinematic_phase != CinematicPhase.NONE or _cinematic_fov_offset != 0.0:
+		return
 	var target: float = _target_fov()
 	_camera.fov = lerpf(_camera.fov, target, clampf(fov_lerp_speed * delta, 0.0, 1.0))
 

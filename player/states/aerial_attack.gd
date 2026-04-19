@@ -124,4 +124,8 @@ func _on_hit_landed(hurtbox: Hurtbox, event: DamageEvent) -> void:
 	Hitstop.pulse(event.hitstop_ms)
 	if player.camera_rig != null:
 		player.camera_rig.shake(event.screen_shake_amplitude)
-	player.on_landed_hit()
+	var point: Vector3 = hurtbox.global_position if hurtbox != null else player.global_position
+	var level: int = _data.charge_level if _data != null else 0
+	player.on_landed_hit(point, -event.direction, level)
+	var target: Node = hurtbox.owner_ref if hurtbox != null else null
+	player.deliver_knockback(target, &"air", point, level)
